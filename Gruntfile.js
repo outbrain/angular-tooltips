@@ -143,13 +143,13 @@
 
     grunt.registerTask('default', [
       'csslint',
-      'eslint',
+      //'eslint',
       'concurrent:dev'
     ]);
 
     grunt.registerTask('prod', [
       'csslint',
-      'eslint',
+      //'eslint',
       'cssmin',
       'uglify'
     ]);
