@@ -4,7 +4,7 @@
   'use strict';
 
   angular.module('720kb.tooltips', [])
-    .directive('tooltips', ['$window', '$compile', '$timeout', function manageDirective($window, $compile, $timeout) {
+    .directive('tooltips', ['$window', '$compile', '$timeout', '$rootScope', function manageDirective($window, $compile, $timeout) {
 
       var TOOLTIP_SMALL_MARGIN = 8 //px
         , TOOLTIP_MEDIUM_MARGIN = 9 //px
@@ -42,7 +42,8 @@
             , closeButtonContent = attr.tooltipCloseButton || ''
             , htmlTemplate = '<div class="_720kb-tooltip ' + CSS_PREFIX + size + '">'
             , hideDelay = attr.tooltipHideDelay || '0'
-            , cancelClickEvent = !!attr.tooltipCancelClickEvent;
+            , cancelClickEvent = !!attr.tooltipCancelClickEvent
+            , nestedScroll =  attr.tooltipNestedScroll || 'false';
 
           if (hasCloseButton) {
             htmlTemplate += '<span class="' + CSS_PREFIX + 'close-button" ng-click="hideTooltip()"> ' + closeButtonContent + ' </span>';
@@ -107,6 +108,9 @@
           };
 
           $scope.getRootOffsetTop = function getRootOffsetTop (elem, val){
+            if(nestedScroll === 'true'){
+              return elem.getBoundingClientRect().top;
+            }
 
             if (elem.offsetParent === null){
 
@@ -117,6 +121,9 @@
           };
 
           $scope.getRootOffsetLeft = function getRootOffsetLeft (elem, val){
+            if(nestedScroll === 'true'){
+              return elem.getBoundingClientRect().left;
+            }
 
             if (elem.offsetParent === null){
 
@@ -305,12 +312,29 @@
             }, Number(hideDelay));
           }
 
-          angular.element($window).bind('resize', onResize);
+          function onReInit() {
+            $timeout(function () {
+              $scope.hideTooltip();
+              $scope.initTooltip(originSide);
+            }, 0);
+          }
 
+          function onScroll() {
+            $scope.hideTooltip();
+            thisElement[0].blur();
+          }
+
+          angular.element($window).bind('resize', onResize);
+          angular.element($window).bind('reinitToolTips', onReInit);
+          if(nestedScroll){
+            angular.element($window).bind('mousewheel', onScroll);
+          }
           // destroy the tooltip when the directive is destroyed
           // unbind all dom event handlers
           $scope.$on('$destroy', function() {
             angular.element($window).unbind('resize', onResize);
+            angular.element($window).unbind('reinitToolTips', onReInit);
+            angular.element($window).unbind('mousewheel', onScroll);
             $scope.clearTriggers();
             if (cancelClickEvent) {
               thisElement.unbind('click', stopEventPropagation);
