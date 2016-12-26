@@ -35,5 +35,6 @@
       "email": "wouldgo84@gmail.com",
       "url": "https://github.com/wouldgo"
     }
-  ]
+  ],
+  "main": "src/js/angular-tooltips.js"
 }
